@@ -52,6 +52,23 @@ const llm = new ChatOpenAI({
 
 export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Missing or invalid API key' },
+        { status: 401 }
+      );
+    }
+
+    const apiKey = authHeader.split(' ')[1];
+    
+    // Initialize ChatOpenAI with the provided API key
+    const chat = new ChatOpenAI({
+      openAIApiKey: apiKey,
+      modelName: "gpt-3.5-turbo",
+      temperature: 0.7,
+    });
+
     // Log the incoming request
     console.log('Received request:', {
       method: req.method,
@@ -134,7 +151,7 @@ export async function POST(req: NextRequest) {
         chat_history: memoryResult.chat_history || "",
       });
 
-      const response = await llm.invoke(messages);
+      const response = await chat.invoke(messages);
       console.log('Generated response successfully');
 
       await memory.saveContext(

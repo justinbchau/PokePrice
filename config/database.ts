@@ -10,7 +10,7 @@ export const pgVectorStoreConfig = {
     password: process.env.PG_PASSWORD,
     database: "postgres",
   } as PoolConfig,
-  tableName: "cards_data",
+  tableName: "cards",
   columns: {
     idColumnName: "document_id",
     vectorColumnName: "embedding",

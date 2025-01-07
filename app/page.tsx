@@ -86,7 +86,7 @@ export default function Home() {
         let errorData;
         try {
           errorData = JSON.parse(errorText);
-        } catch (e) {
+        } catch (_) {
           errorData = { details: errorText };
         }
 

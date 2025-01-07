@@ -29,10 +29,10 @@ const memory = new BufferMemory({
   outputKey: "answer",
 });
 
-const InputStateAnnotation = Annotation.Root({
-  question: Annotation<string>,
-  chat_history: Annotation<string>,
-});
+type InputStateType = {
+  question: string;
+  chat_history: string;
+};
 
 const StateAnnotation = Annotation.Root({
   question: Annotation<string>,
@@ -118,9 +118,8 @@ export async function POST(req: NextRequest) {
 
     const { question } = body;
 
-    const retrieve = async (state: typeof InputStateAnnotation.State) => {
+    const retrieve = async (state: InputStateType) => {
       console.log('Starting retrieval for question:', state.question);
-      // Use the existing vectorStore instance
       const retrievedDocs = await vectorStore.similaritySearch(state.question);
       console.log('Retrieved documents count:', retrievedDocs.length);
       return { context: retrievedDocs };

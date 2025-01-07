@@ -41,15 +41,6 @@ const StateAnnotation = Annotation.Root({
   answer: Annotation<string>,
 });
 
-const embeddings = new OpenAIEmbeddings({
-  model: "text-embedding-3-small",
-});
-
-const llm = new ChatOpenAI({
-  model: "gpt-4",
-  temperature: 0,
-});
-
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
@@ -62,10 +53,19 @@ export async function POST(req: NextRequest) {
 
     const apiKey = authHeader.split(' ')[1];
     
+    const embeddings = new OpenAIEmbeddings({
+      model: "text-embedding-3-small",
+      openAIApiKey: apiKey
+    });
+
+    // Initialize vector store once here
+    const vectorStore = await PGVectorStore.initialize(embeddings, pgVectorStoreConfig);
+    console.log('Vector store initialized successfully');
+
     // Initialize ChatOpenAI with the provided API key
     const chat = new ChatOpenAI({
       openAIApiKey: apiKey,
-      modelName: "gpt-3.5-turbo",
+      modelName: "gpt-4o-mini",
       temperature: 0.7,
     });
 
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check environment variables
-    const requiredEnvVars = ['PG_HOST', 'PG_PASSWORD', 'OPENAI_API_KEY'];
+    const requiredEnvVars = ['PG_HOST', 'PG_PASSWORD'];
     const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
     
     if (missingEnvVars.length > 0) {
@@ -118,20 +118,9 @@ export async function POST(req: NextRequest) {
 
     const { question } = body;
 
-    try {
-      const vectorStore = await PGVectorStore.initialize(embeddings, pgVectorStoreConfig);
-      console.log('Vector store initialized successfully');
-    } catch (dbError) {
-      console.error('Database connection error:', dbError);
-      return NextResponse.json(
-        { error: "Database connection failed", details: dbError instanceof Error ? dbError.message : "Unknown database error" },
-        { status: 500 }
-      );
-    }
-
     const retrieve = async (state: typeof InputStateAnnotation.State) => {
       console.log('Starting retrieval for question:', state.question);
-      const vectorStore = await PGVectorStore.initialize(embeddings, pgVectorStoreConfig);
+      // Use the existing vectorStore instance
       const retrievedDocs = await vectorStore.similaritySearch(state.question);
       console.log('Retrieved documents count:', retrievedDocs.length);
       return { context: retrievedDocs };

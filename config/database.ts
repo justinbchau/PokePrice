@@ -6,7 +6,7 @@ export const pgVectorStoreConfig = {
     type: "postgres",
     host: process.env.PG_HOST,
     port: 5432,
-    user: "postgres",
+    user: "postgres.zcwynrkbdtfyfrfxrkti",
     password: process.env.PG_PASSWORD,
     database: "postgres",
   } as PoolConfig,
@@ -14,7 +14,7 @@ export const pgVectorStoreConfig = {
   columns: {
     idColumnName: "document_id",
     vectorColumnName: "embedding",
-    contentColumnName: "document_content",
+    contentColumnName: "metadata",
     metadataColumnName: "metadata",
   },
   distanceStrategy: "cosine" as DistanceStrategy,

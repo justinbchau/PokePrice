@@ -3,11 +3,13 @@ import Image from 'next/image';
 import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
+  const appTitle = process.env.NEXT_PUBLIC_APP_TITLE || "PokePrice Check";
+
   return (
     <header className="w-full bg-transparent dark:bg-transparent p-2">
       <div className="max-w-3xl mx-auto flex justify-between items-center">
         <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-          PokePrice Check
+          {appTitle}
         </Link>
         <div className="flex items-center space-x-4">
           <a

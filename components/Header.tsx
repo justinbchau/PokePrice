@@ -12,7 +12,7 @@ export default function Header() {
         </Link>
         <div className="flex items-center space-x-4">
           <a
-            href="https://github.com/yourusername/pokemon-tcg-price-analyzer"
+            href="https://github.com/justinbchau/PokePrice"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400"

@@ -8,8 +8,6 @@ import { Annotation } from "@langchain/langgraph";
 import { StateGraph } from "@langchain/langgraph";
 import { pgVectorStoreConfig } from "@/config/database";
 import { BufferMemory } from "langchain/memory";
-import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
-import { createClient } from '@supabase/supabase-js';
 
 // Create our own prompt template instead of pulling from hub
 const promptTemplate = ChatPromptTemplate.fromTemplate(`You are a helpful assistant that answers questions about Pokemon card prices.
@@ -55,11 +53,6 @@ export async function POST(req: NextRequest) {
 
     const apiKey = authHeader.split(' ')[1];
     
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
 
     const embeddings = new OpenAIEmbeddings({
       openAIApiKey: apiKey

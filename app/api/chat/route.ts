@@ -168,14 +168,22 @@ export async function POST(req: NextRequest) {
       });
 
       const response = await chat.invoke(messages);
-      console.log('Generated response:', response.content);
+      
+      // Clean up the response by removing Markdown formatting
+      const cleanedResponse = String(response.content)
+        .replace(/\*\*/g, '')  // Remove bold formatting
+        .replace(/\*/g, '')    // Remove any remaining asterisks
+        .replace(/`/g, '')     // Remove code formatting
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1: $2') // Convert markdown links to text: url format
+        
+      console.log('Generated clean response:', cleanedResponse);
 
       await memory.saveContext(
         { question: state.question },
-        { answer: response.content }
+        { answer: cleanedResponse }
       );
 
-      return { answer: response.content };
+      return { answer: cleanedResponse };
     };
 
     const graph = new StateGraph(StateAnnotation)

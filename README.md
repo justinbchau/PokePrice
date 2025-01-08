@@ -4,7 +4,7 @@ A real-time Pokémon card price checker powered by AI. Ask natural language ques
 
 ## 🚀 Live Demo
 
-Check out the live application: [PokePrice Check](https://poke-price.vercel.app/)
+Check out the live application: [PokePrice Check](https://pokeprice-check.vercel.app)
 
 ## ✨ Features
 

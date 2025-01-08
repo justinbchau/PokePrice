@@ -8,6 +8,8 @@ import { Annotation } from "@langchain/langgraph";
 import { StateGraph } from "@langchain/langgraph";
 import { pgVectorStoreConfig } from "@/config/database";
 import { BufferMemory } from "langchain/memory";
+import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
+import { createClient } from '@supabase/supabase-js';
 
 // Create our own prompt template instead of pulling from hub
 const promptTemplate = ChatPromptTemplate.fromTemplate(`You are a helpful assistant that answers questions about Pokemon card prices.
@@ -20,7 +22,7 @@ Context information from database:
 
 Current question: {question}
 
-Please provide a helpful answer based on the context and previous conversation. If you cannot find the information in the context, please say so.`);
+Please provide a helpful answer based the question the user asked using the context and previous conversation. If you cannot find the information in the context, please say so.`);
 
 const memory = new BufferMemory({
   returnMessages: true,
@@ -53,14 +55,18 @@ export async function POST(req: NextRequest) {
 
     const apiKey = authHeader.split(' ')[1];
     
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
     const embeddings = new OpenAIEmbeddings({
-      model: "text-embedding-3-small",
       openAIApiKey: apiKey
     });
 
-    // Initialize vector store once here
+    // Initialize vector store with Supabase
     const vectorStore = await PGVectorStore.initialize(embeddings, pgVectorStoreConfig);
-    console.log('Vector store initialized successfully');
 
     // Initialize ChatOpenAI with the provided API key
     const chat = new ChatOpenAI({
@@ -120,16 +126,38 @@ export async function POST(req: NextRequest) {
 
     const retrieve = async (state: InputStateType) => {
       console.log('Starting retrieval for question:', state.question);
-      const retrievedDocs = await vectorStore.similaritySearch(state.question);
-      console.log('Retrieved documents count:', retrievedDocs.length);
-      return { context: retrievedDocs };
+      try {
+        const retrievedDocs = await vectorStore.similaritySearch(
+          state.question,
+          10
+        );
+        
+        console.log('Retrieved documents:', retrievedDocs.length);
+        retrievedDocs.forEach((doc, index) => {
+          console.log(`Document ${index + 1}:`, doc.pageContent);
+        });
+        
+        return { context: retrievedDocs };
+      } catch (error) {
+        console.error('Error in retrieval:', error);
+        throw error;
+      }
     };
 
     const generate = async (state: typeof StateAnnotation.State) => {
       console.log('Starting generation with context length:', state.context.length);
+      
+      if (state.context.length === 0) {
+        return { 
+          answer: "I apologize, but I couldn't find any relevant information about that in my database. Could you please try rephrasing your question or ask about a different card?" 
+        };
+      }
+
       const docsContent = state.context
         .map((doc) => doc.pageContent)
-        .join("\n");
+        .join("\n\n");
+      
+      console.log('Using context:', docsContent);
 
       const memoryResult = await memory.loadMemoryVariables({});
       
@@ -140,7 +168,7 @@ export async function POST(req: NextRequest) {
       });
 
       const response = await chat.invoke(messages);
-      console.log('Generated response successfully');
+      console.log('Generated response:', response.content);
 
       await memory.saveContext(
         { question: state.question },

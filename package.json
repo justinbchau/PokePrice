@@ -13,6 +13,7 @@
     "@langchain/core": "^0.3.26",
     "@langchain/langgraph": "^0.2.34",
     "@langchain/openai": "^0.3.16",
+    "@supabase/supabase-js": "^2.47.11",
     "next": "15.1.2",
     "pg": "^8.13.1",
     "react": "^19.0.0",
